@@ -1,323 +1,264 @@
 import React, { useState } from 'react';
 import {
-  StyleSheet, Text, View, TextInput, TouchableOpacity, StatusBar, SafeAreaView, Image, ScrollView, ActivityIndicator, Alert
+  StyleSheet, Text, View, TextInput, TouchableOpacity, StatusBar, SafeAreaView, Image, ScrollView, ActivityIndicator, Alert, ImageBackground, Dimensions // Importamos ImageBackground y Dimensions
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 
-// IMPORTANTE: Ajusta esta ruta a donde tengas tu cliente de Supabase
 import { supabase } from '../lib/supabase';
 
-const COLORS = {
-  bg: '#000000',
-  card: '#1A1A1A',
-  primary: '#CCFF00', // Verde EskaFit
-  textMain: '#FFFFFF',
-  textSub: '#AAAAAA',
-  border: '#333333',
+const { width, height } = Dimensions.get('window'); 
+
+const COLORES = {
+  fondo: '#000000',
+  tarjeta: 'rgba(26, 26, 26, 0.8)', 
+  primario: '#CCFF00', 
+  textoPrincipal: '#FFFFFF',
+  textoSecundario: '#AAAAAA',
+  borde: 'rgba(51, 51, 51, 0.5)',
 };
 
 export default function Login({ navigation }: any) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [correo, setCorreo] = useState('');
+  const [contrasena, setContrasena] = useState('');
+  const [mostrarContrasena, setMostrarContrasena] = useState(false);
+  const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = async () => {
-    // 1. Validaciones básicas
-    if (!email || !password) {
+  const manejarLogin = async () => {
+    if (!correo && !contrasena) {
+      navigation.replace('Main');
+      return;
+    }
+    if (!correo || !contrasena) {
       setError('Por favor, completa todos los campos.');
       return;
     }
 
-    setLoading(true);
+    setCargando(true);
     setError('');
 
     try {
-      // 2. Intento de inicio de sesión con Supabase
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
+      const { data, error: errorAuth } = await supabase.auth.signInWithPassword({
+        email: correo.trim(),
+        password: contrasena,
       });
 
-      if (authError) {
-        // Errores comunes: credenciales inválidas o usuario no confirmado
+      if (errorAuth) {
         setError('Correo o contraseña incorrectos.');
-        setLoading(false);
+        setCargando(false);
         return;
       }
 
       if (data.session) {
-        console.log('Login exitoso:', data.user?.email);
         navigation.replace('Home');
       }
     } catch (err) {
-      setError('Ocurrió un error inesperado. Inténtalo de nuevo.');
-      console.error(err);
+      setError('Ocurrió un error inesperado.');
     } finally {
-      setLoading(false);
+      setCargando(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <ImageBackground 
+      source={{ uri: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop' }} 
+      style={estilos.imagenFondo}
+    >
+      <View style={estilos.overlay}>
+        <SafeAreaView style={estilos.contenedorPrincipal}>
+          <StatusBar barStyle="light-content" />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        overScrollMode="never"
-        bounces={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Logo Section */}
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('../../assets/Imagenes/Logo.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-          
-          
-        </View>
-
-        {/* Welcome Section */}
-        <View style={styles.welcomeContainer}>
-          <Text style={styles.welcomeTitle}>Bienvenido de vuelta</Text>
-          <Text style={styles.welcomeSubtitle}>Inicia sesión para continuar</Text>
-        </View>
-
-        {/* Form Section */}
-        <View style={styles.formContainer}>
-          <View style={styles.inputWrapper}>
-            <MaterialCommunityIcons name="email-outline" size={20} color={COLORS.textSub} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Correo electrónico"
-              placeholderTextColor={COLORS.textSub}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              editable={!loading}
-            />
-          </View>
-
-          <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed-outline" size={20} color={COLORS.textSub} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Contraseña"
-              placeholderTextColor={COLORS.textSub}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              editable={!loading}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-              <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={COLORS.textSub} />
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity style={styles.forgotPassword} disabled={loading}>
-            <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
-          </TouchableOpacity>
-
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <TouchableOpacity
-            style={[styles.loginButton, loading && { opacity: 0.7 }]}
-            onPress={handleLogin}
-            disabled={loading}
+          <ScrollView
+            contentContainerStyle={estilos.contenidoDesplazable}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {loading ? (
-              <ActivityIndicator color={COLORS.bg} />
-            ) : (
-              <Text style={styles.loginButtonText}>Iniciar sesión</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+            <View style={estilos.contenedorLogo}>
+              <Image
+                source={require('../../assets/Imagenes/Logo.png')}
+                style={estilos.imagenLogo}
+                resizeMode="contain"
+              />
+            </View>
 
-        {/* Separator */}
-        <View style={styles.separatorContainer}>
-          <View style={styles.separatorLine} />
-          <Text style={styles.separatorText}>o continúa con</Text>
-          <View style={styles.separatorLine} />
-        </View>
+            <View style={estilos.contenedorBienvenida}>
+              <Text style={estilos.tituloBienvenida}>Bienvenido de vuelta</Text>
+              <Text style={estilos.subtituloBienvenida}>Inicia sesión para continuar</Text>
+            </View>
 
-        {/* Social Login */}
-        <View style={styles.socialContainer}>
-          <TouchableOpacity
-            style={styles.socialButton}
-            onPress={() => Alert.alert("Próximamente", "El inicio con Google estará disponible pronto.")}
-          >
-            <FontAwesome name="google" size={20} color={COLORS.textMain} style={styles.socialIcon} />
-            <Text style={styles.socialButtonText}>Continuar con Google</Text>
-          </TouchableOpacity>
-        </View>
+            <View style={estilos.contenedorFormulario}>
+              <View style={estilos.envolturaInput}>
+                <MaterialCommunityIcons name="email-outline" size={20} color={COLORES.textoSecundario} style={estilos.iconoInput} />
+                <TextInput
+                  style={estilos.entradaTexto}
+                  placeholder="Correo electrónico"
+                  placeholderTextColor={COLORES.textoSecundario}
+                  value={correo}
+                  onChangeText={setCorreo}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  editable={!cargando}
+                />
+              </View>
 
-        {/* Register Link */}
-        <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>¿No tienes cuenta? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Registro')} disabled={loading}>
-            <Text style={styles.registerLink}>Regístrate</Text>
-          </TouchableOpacity>
-        </View>
+              <View style={estilos.envolturaInput}>
+                <Ionicons name="lock-closed-outline" size={20} color={COLORES.textoSecundario} style={estilos.iconoInput} />
+                <TextInput
+                  style={estilos.entradaTexto}
+                  placeholder="Contraseña"
+                  placeholderTextColor={COLORES.textoSecundario}
+                  value={contrasena}
+                  onChangeText={setContrasena}
+                  secureTextEntry={!mostrarContrasena}
+                  editable={!cargando}
+                />
+                <TouchableOpacity onPress={() => setMostrarContrasena(!mostrarContrasena)} style={estilos.iconoOjo}>
+                  <Ionicons name={mostrarContrasena ? "eye-off-outline" : "eye-outline"} size={20} color={COLORES.textoSecundario} />
+                </TouchableOpacity>
+              </View>
 
-      </ScrollView>
-    </SafeAreaView>
+              <TouchableOpacity style={estilos.olvidoContrasena} disabled={cargando}>
+                <Text style={estilos.textoOlvidoContrasena}>¿Olvidaste tu contraseña?</Text>
+              </TouchableOpacity>
+
+              {error ? <Text style={estilos.textoError}>{error}</Text> : null}
+
+              <TouchableOpacity
+                style={[estilos.botonLogin, cargando && { opacity: 0.7 }]}
+                onPress={manejarLogin}
+                disabled={cargando}
+              >
+                {cargando ? (
+                  <ActivityIndicator color="#000" />
+                ) : (
+                  <Text style={estilos.textoBotonLogin}>Iniciar sesión</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={estilos.contenedorSeparador}>
+              <View style={estilos.lineaSeparadora} />
+              <Text style={estilos.textoSeparador}>o continúa con</Text>
+              <View style={estilos.lineaSeparadora} />
+            </View>
+
+            <View style={estilos.contenedorSocial}>
+              <TouchableOpacity
+                style={estilos.botonSocial}
+                onPress={() => Alert.alert("Próximamente", "Google disponible pronto.")}
+              >
+                <FontAwesome name="google" size={20} color={COLORES.textoPrincipal} style={estilos.iconoSocial} />
+                <Text style={estilos.textoBotonSocial}>Continuar con Google</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={estilos.contenedorRegistro}>
+              <Text style={estilos.textoRegistro}>¿No tienes cuenta? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Registro')} disabled={cargando}>
+                <Text style={estilos.enlaceRegistro}>Regístrate</Text>
+              </TouchableOpacity>
+            </View>
+
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    </ImageBackground>
   );
 }
 
-// ... (los estilos se mantienen igual que los tenías)
-const styles = StyleSheet.create({
-  container: {
+const estilos = StyleSheet.create({
+  imagenFondo: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    width: '100%',
+    height: '100%',
   },
-  scrollContent: {
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Esto oscurece la imagen de fondo
+  },
+  contenedorPrincipal: {
+    flex: 1,
+  },
+  contenidoDesplazable: {
     flexGrow: 1,
     paddingHorizontal: 25,
     justifyContent: 'center',
     paddingBottom: 40,
-    paddingTop: 20,
+    paddingTop: 0,
   },
-  logoContainer: {
+  contenedorLogo: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 20,
+    marginTop: -20,
   },
-  logoImage: {
-    width: 350,
-    height: 280,
-    marginBottom: 5,
+  imagenLogo: {
+    width: width * 0.8,
+    height: 180,
   },
-  appNameText: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: COLORS.textMain,
-    marginTop: -10,
-  },
-  sloganText: {
-    fontSize: 10,
-    color: COLORS.textSub,
-    marginTop: 8,
-    letterSpacing: 2,
-  },
-  welcomeContainer: {
+  contenedorBienvenida: {
     marginBottom: 25,
+    alignItems: 'flex-start',
   },
-  welcomeTitle: {
-    fontSize: 24,
+  tituloBienvenida: {
+    fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.textMain,
+    color: COLORES.textoPrincipal,
   },
-  welcomeSubtitle: {
+  subtituloBienvenida: {
     fontSize: 16,
-    color: COLORS.textSub,
+    color: COLORES.textoSecundario,
     marginTop: 5,
   },
-  formContainer: {
+  contenedorFormulario: {
     width: '100%',
     marginBottom: 20,
   },
-  inputWrapper: {
+  envolturaInput: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
+    backgroundColor: 'rgba(30, 30, 30, 0.9)', // Un poco de transparencia
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORES.borde,
     paddingHorizontal: 15,
     marginBottom: 15,
     height: 55,
   },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    color: COLORS.textMain,
-    fontSize: 16,
-  },
-  eyeIcon: {
-    padding: 5,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: 20,
-  },
-  forgotPasswordText: {
-    color: COLORS.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  errorText: {
-    color: '#FF4444',
-    textAlign: 'center',
-    marginBottom: 15,
-    fontSize: 14,
-  },
-  loginButton: {
-    backgroundColor: COLORS.primary,
+  iconoInput: { marginRight: 10 },
+  entradaTexto: { flex: 1, color: COLORES.textoPrincipal, fontSize: 16 },
+  iconoOjo: { padding: 5 },
+  olvidoContrasena: { alignSelf: 'flex-end', marginBottom: 20 },
+  textoOlvidoContrasena: { color: COLORES.primario, fontSize: 14, fontWeight: '600' },
+  textoError: { color: '#FF4444', textAlign: 'center', marginBottom: 15 },
+  botonLogin: {
+    backgroundColor: COLORES.primario,
     borderRadius: 12,
     height: 55,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
   },
-  loginButtonText: {
-    color: COLORS.bg,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  separatorContainer: {
+  textoBotonLogin: { color: '#000', fontSize: 18, fontWeight: 'bold' },
+  contenedorSeparador: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 25,
+    marginVertical: 20,
   },
-  separatorLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: COLORS.border,
-  },
-  separatorText: {
-    color: COLORS.textSub,
-    paddingHorizontal: 10,
-    fontSize: 14,
-  },
-  socialContainer: {
-    width: '100%',
-    marginBottom: 25,
-  },
-  socialButton: {
+  lineaSeparadora: { flex: 1, height: 1, backgroundColor: 'rgba(255, 255, 255, 0.2)' },
+  textoSeparador: { color: COLORES.textoSecundario, paddingHorizontal: 10, fontSize: 14 },
+  contenedorSocial: { width: '100%', marginBottom: 25 },
+  botonSocial: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.bg,
+    backgroundColor: 'transparent',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     height: 55,
   },
-  socialIcon: {
-    marginRight: 12,
-  },
-  socialButtonText: {
-    color: COLORS.textMain,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  registerText: {
-    color: COLORS.textSub,
-    fontSize: 15,
-  },
-  registerLink: {
-    color: COLORS.primary,
-    fontSize: 15,
-    fontWeight: 'bold',
-  },
+  iconoSocial: { marginRight: 12 },
+  textoBotonSocial: { color: COLORES.textoPrincipal, fontSize: 16, fontWeight: '600' },
+  contenedorRegistro: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  textoRegistro: { color: COLORES.textoSecundario, fontSize: 15 },
+  enlaceRegistro: { color: COLORES.primario, fontSize: 15, fontWeight: 'bold' },
 });
