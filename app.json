@@ -8,24 +8,30 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/Imagenes/Logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/Imagenes/Logo.png",
+        "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "package": "com.esteban_corr3a.eskafit"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/Imagenes/Logo.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "dd1a4379-d423-45ea-92d5-6b8b7f44ce46"
+      }
     }
   }
 }

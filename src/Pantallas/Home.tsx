@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import {
     StyleSheet,
     View,
@@ -12,20 +13,60 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { supabase } from '../lib/supabase';
 
 const { width } = Dimensions.get('window');
 
 const COLORES = {
     fondo: '#000000',
     tarjeta: '#121212',
-    primario: '#C5FF2A', // Verde EskaFit
+    primario: '#C5FF2A',
     textoPrincipal: '#FFFFFF',
     textoSecundario: '#8E8E93',
     borde: '#1C1C1E',
 };
 
-export default function HomeScreen() {
-    const [nombreUsuario] = useState('Katerine');
+export default function HomeScreen({ navigation }: any) {
+    const [nombreUsuario, setNombreUsuario] = useState('Cargando...');
+    const [esAdmin, setEsAdmin] = useState(false);
+
+    useEffect(() => {
+        obtenerDatosUsuario();
+    }, []);
+
+    const obtenerDatosUsuario = async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (user) {
+                const { data, error } = await supabase
+                    .from('Usuarios')
+                    .select('nombre_completo, rol')
+                    .eq('id', user.id)
+                    .single();
+
+                if (error) {
+                    console.error("Error en Supabase:", error.message);
+                    setNombreUsuario("Usuario");
+                    return;
+                }
+
+                if (data) {
+                    setNombreUsuario(data.nombre_completo || 'Sin nombre');
+                    if (data.rol?.toLowerCase().trim() === 'admin') {
+                        setEsAdmin(true);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error inesperado:", error);
+        }
+    };
+
+    const cerrarSesion = async () => {
+        await supabase.auth.signOut();
+        navigation.replace('Login');
+    };
 
     return (
         <SafeAreaView style={estilos.contenedorPrincipal}>
@@ -33,7 +74,7 @@ export default function HomeScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={estilos.contenidoScroll}>
 
-                {/* Saludo Inicial - Ahora es lo primero que se ve */}
+                {/* Saludo Inicial */}
                 <View style={estilos.contenedorSaludo}>
                     <Text style={estilos.textoSaludo}>Hola, {nombreUsuario} 👋</Text>
                     <Text style={estilos.textoSubsaludo}>Vamos con todo hoy</Text>
@@ -88,24 +129,43 @@ export default function HomeScreen() {
                         tiempo="20 min"
                         img="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&auto=format"
                     />
-                    <TarjetaRutina
-                        titulo="Cardio HIIT"
-                        nivel="Avanzado"
-                        tiempo="25 min"
-                        img="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500&auto=format"
-                    />
                 </ScrollView>
 
                 {/* Sección: Tu Progreso */}
                 <Text style={[estilos.tituloSeccion, { marginTop: 25, marginBottom: 15 }]}>Tu progreso</Text>
                 <View style={estilos.contenedorProgreso}>
-                    <CardProgreso icon="flame" valor="5" desc="días seguidos" color="#FF8C00" />
-                    <CardProgreso icon="arm-flex" valor="12" desc="completadas" color={COLORES.primario} isMCI />
+                    <CardProgreso icon="flame" valor="5" desc="días" color="#FF8C00" />
+                    <CardProgreso icon="arm-flex" valor="12" desc="completas" color={COLORES.primario} isMCI />
                     <CardProgreso icon="trophy" valor="350" desc="minutos" color="#FFD700" />
                 </View>
 
-                {/* Espaciador final para el menú inferior */}
-                <View style={{ height: 120 }} />
+                {/* SECCIÓN AJUSTES (Aquí vive el Panel de Admin ahora) */}
+                <Text style={[estilos.tituloSeccion, { marginTop: 35, marginBottom: 15 }]}>Ajustes</Text>
+                
+                <View style={estilos.contenedorMenu}>
+                    {esAdmin && (
+                        <TouchableOpacity 
+                            style={estilos.opcionMenu}
+                            onPress={() => navigation.navigate('AdminPanel')}
+                        >
+                            <View style={[estilos.iconoOpcion, { backgroundColor: 'rgba(197, 255, 42, 0.1)' }]}>
+                                <Ionicons name="shield-checkmark" size={20} color={COLORES.primario} />
+                            </View>
+                            <Text style={estilos.textoOpcion}>Panel de Administración</Text>
+                            <Ionicons name="chevron-forward" size={20} color={COLORES.textoSecundario} />
+                        </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity style={estilos.opcionMenu} onPress={cerrarSesion}>
+                        <View style={[estilos.iconoOpcion, { backgroundColor: 'rgba(255, 68, 68, 0.1)' }]}>
+                            <Ionicons name="log-out-outline" size={20} color="#FF4444" />
+                        </View>
+                        <Text style={[estilos.textoOpcion, { color: '#FF4444' }]}>Cerrar Sesión</Text>
+                        <Ionicons name="chevron-forward" size={20} color={COLORES.textoSecundario} />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={{ height: 100 }} />
             </ScrollView>
         </SafeAreaView>
     );
@@ -137,15 +197,15 @@ const CardProgreso = ({ icon, valor, desc, color, isMCI = false }: any) => (
 
 const estilos = StyleSheet.create({
     contenedorPrincipal: { flex: 1, backgroundColor: COLORES.fondo },
-    contenidoScroll: { paddingHorizontal: 20 },
-    contenedorSaludo: { marginTop: 10, marginBottom: 15 },
+    contenidoScroll: { paddingHorizontal: 20, paddingTop: 10 },
+    contenedorSaludo: { marginBottom: 15 },
     textoSaludo: { fontSize: 28, fontWeight: 'bold', color: COLORES.textoPrincipal },
     textoSubsaludo: { fontSize: 16, color: COLORES.textoSecundario, marginTop: 4 },
     tarjetaDestacadaContainer: { height: 230, borderRadius: 25, marginBottom: 25, overflow: 'hidden' },
     imagenFondoTarjeta: { flex: 1, justifyContent: 'flex-end' },
     overlayNegro: {
         padding: 20,
-        backgroundColor: 'rgba(0,0,0,0.4)',
+        backgroundColor: 'rgba(0,0,0,0.5)',
         flex: 1,
         justifyContent: 'center'
     },
@@ -189,5 +249,34 @@ const estilos = StyleSheet.create({
     },
     filaProgreso: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
     valorProgresoText: { color: '#FFF', fontSize: 22, fontWeight: 'bold', marginLeft: 6 },
-    descProgresoText: { color: COLORES.textoSecundario, fontSize: 11, textAlign: 'center' }
+    descProgresoText: { color: COLORES.textoSecundario, fontSize: 11, textAlign: 'center' },
+    
+    contenedorMenu: {
+        backgroundColor: COLORES.tarjeta,
+        borderRadius: 20,
+        padding: 10,
+        borderWidth: 1,
+        borderColor: COLORES.borde,
+        marginTop: 5
+    },
+    opcionMenu: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 5,
+    },
+    iconoOpcion: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    textoOpcion: {
+        flex: 1,
+        color: '#FFF',
+        fontSize: 16,
+        fontWeight: '500',
+    }
 });

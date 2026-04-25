@@ -1,6 +1,7 @@
-
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, Platform,ScrollView,StatusBar,Image,KeyboardAvoidingView 
+import { 
+  StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator, 
+  Alert, Platform, ScrollView, StatusBar, Image, KeyboardAvoidingView 
 } from 'react-native';
 import { supabase } from '../lib/supabase'; 
 
@@ -10,43 +11,68 @@ export default function Registro({ navigation }: any) {
   const [nombre, setNombre] = useState('');
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
-  const [apodo, setApodo] = useState(''); // nickname
+  const [apodo, setApodo] = useState(''); 
   const [cargando, setCargando] = useState(false);
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
 
   const manejarRegistro = async () => {
+    // Validación de campos locales
     if (!correo || !contrasena || !nombre) {
       Alert.alert('EskaFit', 'Por favor, llena los campos obligatorios (*)');
       return;
     }
 
     setCargando(true);
+    console.log("--- INICIANDO REGISTRO ---");
+
     try {
+      // 1. Crear usuario en la Autenticación de Supabase (auth.users)
       const { data, error: errorAuth } = await supabase.auth.signUp({
-        email: correo,
+        email: correo.trim(),
         password: contrasena,
-        options: { data: { nombre_completo: nombre } },
       });
 
-      if (errorAuth) throw errorAuth;
+      if (errorAuth) {
+        console.error("Error en Auth:", errorAuth.message);
+        throw errorAuth;
+      }
 
       if (data?.user) {
+        console.log("Auth exitoso. ID de usuario:", data.user.id);
+
+        // 2. Insertar o Actualizar en la tabla 'public.Usuarios'
+        // Usamos .upsert() para evitar el error "duplicate key value"
         const { error: errorDB } = await supabase
           .from('Usuarios')
-          .insert([{ 
-            id: data.user.id, 
-            nombre_completo: nombre,
-            email: correo,
-            nickname: apodo || null 
-          }]);
+          .upsert(
+            { 
+              id: data.user.id, 
+              nombre_completo: nombre, 
+              email: correo.trim().toLowerCase(),
+              nickname: apodo || null,
+              rol: 'user' 
+            }, 
+            { onConflict: 'id' } // Si el ID ya existe, actualiza la fila en lugar de fallar
+          );
 
-        if (errorDB) throw errorDB;
+        if (errorDB) {
+          console.error("Error en Base de Datos (Upsert):", errorDB.message);
+          throw errorDB;
+        }
 
-        Alert.alert('¡Bienvenido!', 'Tu cuenta ha sido creada. Revisa tu correo para confirmar el registro.');
+        console.log("¡Flujo de registro completado con éxito!");
+        Alert.alert('¡Bienvenido!', 'Tu cuenta ha sido creada correctamente.');
         navigation.navigate('Login');
       }
     } catch (error: any) {
-      Alert.alert('EskaFit - Error', error.message);
+      console.error("Error capturado en el flujo:", error.message);
+      
+      // Personalizamos el mensaje si detectamos que el correo ya existe
+      if (error.message.includes('Usuarios_email_key')) {
+        Alert.alert('EskaFit', 'Este correo ya está registrado en la base de datos.');
+      } else {
+        Alert.alert('EskaFit - Error', error.message);
+      }
     } finally {
       setCargando(false);
     }
@@ -142,98 +168,99 @@ export default function Registro({ navigation }: any) {
     </View>
   );
 }
+// ... (Tus estilos se mantienen iguales)
 
-const estilos = StyleSheet.create({
-  contenedorPrincipal: { 
-    flex: 1, 
-    backgroundColor: '#000' 
-  },
-  flex1: { 
-    flex: 1 
-  },
-  contenidoScroll: { 
-    padding: 30, 
-    paddingBottom: 50 
-  },
-  encabezado: { 
-    alignItems: 'center', 
-    marginTop: 40, 
-    marginBottom: 30 
-  },
-  logo: { 
-    width: 200, 
-    height: 200 
-  },
-  eslogan: { 
-    fontSize: 10, 
-    color: '#666', 
-    marginTop: 10, 
-    letterSpacing: 2, 
-    fontWeight: '500' 
-  },
-  contenedorBienvenida: { 
-    marginBottom: 25 
-  },
-  titulo: { 
-    fontSize: 28, 
-    fontWeight: 'bold', 
-    color: '#fff' 
-  },
-  subtitulo: { 
-    fontSize: 14, 
-    color: '#666', 
-    marginTop: 5 
-  },
-  formulario: { 
-    width: '100%' 
-  },
-  envolturaInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#333',
-    marginBottom: 15,
-    paddingHorizontal: 15,
-  },
-  entradaTexto: {
-    flex: 1,
-    paddingVertical: 18,
-    color: '#fff',
-    fontSize: 16,
-  },
-  iconoOjo: { 
-    padding: 5 
-  },
-  boton: {
-    backgroundColor: '#C5FF2A', 
-    padding: 18,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 25,
-  },
-  botonDeshabilitado: { 
-    backgroundColor: '#4a6a12' 
-  },
-  textoBoton: { 
-    color: '#000', 
-    fontSize: 18, 
-    fontWeight: 'bold' 
-  },
-  piePagina: { 
-    flexDirection: 'row', 
-    justifyContent: 'center', 
-    marginTop: 30, 
-    marginBottom: 20 
-  },
-  textoPie: { 
-    fontSize: 14, 
-    color: '#fff' 
-  },
-  enlacePie: { 
-    fontSize: 14, 
-    color: '#C5FF2A', 
-    fontWeight: 'bold' 
-  },
-});
+  const estilos = StyleSheet.create({
+    contenedorPrincipal: { 
+      flex: 1, 
+      backgroundColor: '#000' 
+    },
+    flex1: { 
+      flex: 1 
+    },
+    contenidoScroll: { 
+      padding: 30, 
+      paddingBottom: 50 
+    },
+    encabezado: { 
+      alignItems: 'center', 
+      marginTop: 40, 
+      marginBottom: 30 
+    },
+    logo: { 
+      width: 200, 
+      height: 200 
+    },
+    eslogan: { 
+      fontSize: 10, 
+      color: '#666', 
+      marginTop: 10, 
+      letterSpacing: 2, 
+      fontWeight: '500' 
+    },
+    contenedorBienvenida: { 
+      marginBottom: 25 
+    },
+    titulo: { 
+      fontSize: 28, 
+      fontWeight: 'bold', 
+      color: '#fff' 
+    },
+    subtitulo: { 
+      fontSize: 14, 
+      color: '#666', 
+      marginTop: 5 
+    },
+    formulario: { 
+      width: '100%' 
+    },
+    envolturaInput: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#1a1a1a',
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: '#333',
+      marginBottom: 15,
+      paddingHorizontal: 15,
+    },
+    entradaTexto: {
+      flex: 1,
+      paddingVertical: 18,
+      color: '#fff',
+      fontSize: 16,
+    },
+    iconoOjo: { 
+      padding: 5 
+    },
+    boton: {
+      backgroundColor: '#C5FF2A', 
+      padding: 18,
+      borderRadius: 12,
+      alignItems: 'center',
+      marginTop: 25,
+    },
+    botonDeshabilitado: { 
+      backgroundColor: '#4a6a12' 
+    },
+    textoBoton: { 
+      color: '#000', 
+      fontSize: 18, 
+      fontWeight: 'bold' 
+    },
+    piePagina: { 
+      flexDirection: 'row', 
+      justifyContent: 'center', 
+      marginTop: 30, 
+      marginBottom: 20 
+    },
+    textoPie: { 
+      fontSize: 14, 
+      color: '#fff' 
+    },
+    enlacePie: { 
+      fontSize: 14, 
+      color: '#C5FF2A', 
+      fontWeight: 'bold' 
+    },
+  });

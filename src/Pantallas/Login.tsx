@@ -1,17 +1,18 @@
+
 import React, { useState } from 'react';
 import {
-  StyleSheet, Text, View, TextInput, TouchableOpacity, StatusBar, SafeAreaView, Image, ScrollView, ActivityIndicator, Alert, ImageBackground, Dimensions // Importamos ImageBackground y Dimensions
+  StyleSheet, Text, View, TextInput, TouchableOpacity, StatusBar, SafeAreaView, Image, ScrollView, ActivityIndicator, Alert, ImageBackground, Dimensions
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 
 import { supabase } from '../lib/supabase';
 
-const { width, height } = Dimensions.get('window'); 
+const { width, height } = Dimensions.get('window');
 
 const COLORES = {
   fondo: '#000000',
-  tarjeta: 'rgba(26, 26, 26, 0.8)', 
-  primario: '#CCFF00', 
+  tarjeta: 'rgba(26, 26, 26, 0.8)',
+  primario: '#CCFF00',
   textoPrincipal: '#FFFFFF',
   textoSecundario: '#AAAAAA',
   borde: 'rgba(51, 51, 51, 0.5)',
@@ -25,10 +26,12 @@ export default function Login({ navigation }: any) {
   const [error, setError] = useState('');
 
   const manejarLogin = async () => {
+    // Modo invitado (Remover si no es necesario)
     if (!correo && !contrasena) {
       navigation.replace('Main');
       return;
     }
+
     if (!correo || !contrasena) {
       setError('Por favor, completa todos los campos.');
       return;
@@ -50,9 +53,35 @@ export default function Login({ navigation }: any) {
       }
 
       if (data.session) {
-        navigation.replace('Home');
+        const userId = data.session.user.id;
+        console.log("1. Autenticación exitosa. UID:", userId);
+
+        // CONSULTA DETALLADA:
+        const { data: usuarioBD, error: errorBD } = await supabase
+          .from('Usuarios')
+          .select('rol')
+          .eq('id', userId)
+          .maybeSingle(); // Usamos maybeSingle para evitar errores si no existe
+
+        console.log("2. Resultado de tabla Usuarios:", usuarioBD);
+
+        if (errorBD) {
+          console.error("Error en consulta de base de datos:", errorBD.message);
+        }
+
+        // VALIDACIÓN DE ROL
+        // Usamos .toLowerCase() y .trim() para evitar errores por espacios o mayúsculas
+        const rolUsuario = usuarioBD?.rol?.toLowerCase().trim();
+
+        if (rolUsuario === 'admin') {
+          console.log("3. ¡Acceso ADMIN confirmado!");
+          navigation.replace('Main'); // <--- Aquí deberías ir a tu pantalla de Admin
+        } else {
+          navigation.replace('Main');
+        }
       }
     } catch (err) {
+      console.error("Error inesperado:", err);
       setError('Ocurrió un error inesperado.');
     } finally {
       setCargando(false);
@@ -60,8 +89,8 @@ export default function Login({ navigation }: any) {
   };
 
   return (
-    <ImageBackground 
-      source={{ uri: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop' }} 
+    <ImageBackground
+      source={{ uri: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop' }}
       style={estilos.imagenFondo}
     >
       <View style={estilos.overlay}>
@@ -167,95 +196,30 @@ export default function Login({ navigation }: any) {
 }
 
 const estilos = StyleSheet.create({
-  imagenFondo: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Esto oscurece la imagen de fondo
-  },
-  contenedorPrincipal: {
-    flex: 1,
-  },
-  contenidoDesplazable: {
-    flexGrow: 1,
-    paddingHorizontal: 25,
-    justifyContent: 'center',
-    paddingBottom: 40,
-    paddingTop: 0,
-  },
-  contenedorLogo: {
-    alignItems: 'center',
-    marginBottom: 20,
-    marginTop: -20,
-  },
-  imagenLogo: {
-    width: width * 0.8,
-    height: 180,
-  },
-  contenedorBienvenida: {
-    marginBottom: 25,
-    alignItems: 'flex-start',
-  },
-  tituloBienvenida: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: COLORES.textoPrincipal,
-  },
-  subtituloBienvenida: {
-    fontSize: 16,
-    color: COLORES.textoSecundario,
-    marginTop: 5,
-  },
-  contenedorFormulario: {
-    width: '100%',
-    marginBottom: 20,
-  },
-  envolturaInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(30, 30, 30, 0.9)', // Un poco de transparencia
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORES.borde,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    height: 55,
-  },
+  imagenFondo: { flex: 1, width: '100%', height: '100%' },
+  overlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.7)' },
+  contenedorPrincipal: { flex: 1 },
+  contenidoDesplazable: { flexGrow: 1, paddingHorizontal: 25, justifyContent: 'center', paddingBottom: 40 },
+  contenedorLogo: { alignItems: 'center', marginBottom: 20, marginTop: -20 },
+  imagenLogo: { width: width * 0.8, height: 180 },
+  contenedorBienvenida: { marginBottom: 25, alignItems: 'flex-start' },
+  tituloBienvenida: { fontSize: 28, fontWeight: 'bold', color: COLORES.textoPrincipal },
+  subtituloBienvenida: { fontSize: 16, color: COLORES.textoSecundario, marginTop: 5 },
+  contenedorFormulario: { width: '100%', marginBottom: 20 },
+  envolturaInput: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(30, 30, 30, 0.9)', borderRadius: 12, borderWidth: 1, borderColor: COLORES.borde, paddingHorizontal: 15, marginBottom: 15, height: 55 },
   iconoInput: { marginRight: 10 },
   entradaTexto: { flex: 1, color: COLORES.textoPrincipal, fontSize: 16 },
   iconoOjo: { padding: 5 },
   olvidoContrasena: { alignSelf: 'flex-end', marginBottom: 20 },
   textoOlvidoContrasena: { color: COLORES.primario, fontSize: 14, fontWeight: '600' },
   textoError: { color: '#FF4444', textAlign: 'center', marginBottom: 15 },
-  botonLogin: {
-    backgroundColor: COLORES.primario,
-    borderRadius: 12,
-    height: 55,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  botonLogin: { backgroundColor: COLORES.primario, borderRadius: 12, height: 55, justifyContent: 'center', alignItems: 'center' },
   textoBotonLogin: { color: '#000', fontSize: 18, fontWeight: 'bold' },
-  contenedorSeparador: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
+  contenedorSeparador: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
   lineaSeparadora: { flex: 1, height: 1, backgroundColor: 'rgba(255, 255, 255, 0.2)' },
   textoSeparador: { color: COLORES.textoSecundario, paddingHorizontal: 10, fontSize: 14 },
   contenedorSocial: { width: '100%', marginBottom: 25 },
-  botonSocial: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    height: 55,
-  },
+  botonSocial: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.3)', height: 55 },
   iconoSocial: { marginRight: 12 },
   textoBotonSocial: { color: COLORES.textoPrincipal, fontSize: 16, fontWeight: '600' },
   contenedorRegistro: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
