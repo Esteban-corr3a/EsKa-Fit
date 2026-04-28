@@ -6,7 +6,8 @@ export default function AdminPanel({ navigation }: any) {
   const opciones = [
     { id: 1, nombre: 'Gestión de Usuarios', icono: 'people', color: '#C5FF2A', ruta: 'ADMIN_Gestionperfiles' },
     { id: 2, nombre: 'Agregar Nueva Rutina', icono: 'dumbbell', color: '#00FFB2', ruta: 'ADMIN_SubirRutina' },
-    { id: 3, nombre: 'Reportes de Progreso', icono: 'bar-chart', color: '#FFD700', ruta: 'Home' }, // Temporal
+    { id: 4, nombre: 'Agregar Ejercicio', icono: 'fitness', color: '#FF4444', ruta: 'ADMIN_SubirEjercicio' }, // Nueva opción
+    { id: 3, nombre: 'Reportes de Progreso', icono: 'bar-chart', color: '#FFD700', ruta: 'Home' },
   ];
 
   return (
