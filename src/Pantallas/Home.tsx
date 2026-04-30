@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback,useEffect } from 'react';
 import {
     StyleSheet,
     View,
@@ -11,8 +11,10 @@ import {
     Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import { useFocusEffect } from '@react-navigation/native'; 
+
 
 const { width } = Dimensions.get('window');
 
@@ -27,10 +29,13 @@ const COLORES = {
 
 export default function HomeScreen() {
     const [nombreUsuario, setNombreUsuario] = useState('Cargando...');
+    const [fotoPerfil, setFotoPerfil] = useState('https://via.placeholder.com/150');
 
-    useEffect(() => {
+    useFocusEffect(
+    useCallback(() => {
         obtenerDatosUsuario();
-    }, []);
+    }, [])
+);
 
     const obtenerDatosUsuario = async () => {
         try {
@@ -38,19 +43,23 @@ export default function HomeScreen() {
             if (user) {
                 const { data, error } = await supabase
                     .from('Usuarios')
-                    .select('nombre_completo')
+                    .select('nombre_completo, foto_url')
                     .eq('id', user.id)
                     .single();
 
                 if (data) {
-                    setNombreUsuario(data.nombre_completo || 'Guerrero/a');
-                } else {
-                    setNombreUsuario('Guerrero/a');
+                    // Extraemos solo el primer nombre para el saludo
+                    const primerNombre = data.nombre_completo ? data.nombre_completo.split(' ')[0] : 'Guerrero';
+                    setNombreUsuario(primerNombre);
+                    
+                    if (data.foto_url) {
+                        setFotoPerfil(data.foto_url);
+                    }
                 }
             }
         } catch (error) {
-            console.error("Error inesperado:", error);
-            setNombreUsuario("Guerrero/a");
+            console.error("Error al obtener datos:", error);
+            setNombreUsuario("Guerrero");
         }
     };
 
@@ -58,20 +67,37 @@ export default function HomeScreen() {
         <SafeAreaView style={estilos.contenedorPrincipal}>
             <StatusBar barStyle="light-content" />
 
+            {/* HEADER: Foto de perfil, Nombre y Configuración */}
+            <View style={estilos.headerSuperior}>
+                <View style={estilos.perfilGrupo}>
+                    <Image 
+                        source={{ uri: fotoPerfil }} 
+                        style={estilos.fotoPerfilHeader} 
+                    />
+                    <View style={estilos.textoGrupoHeader}>
+                        <Text style={estilos.textoHola}>Hola,</Text>
+                        <Text style={estilos.textoNombreUser}>{nombreUsuario} 👋</Text>
+                    </View>
+                </View>
+                
+                <TouchableOpacity style={estilos.botonConfig}>
+                    <Feather name="menu" size={24} color={COLORES.textoPrincipal} />
+                </TouchableOpacity>
+            </View>
+
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={estilos.contenidoScroll}>
 
-                {/* Saludo Inicial */}
-                <View style={estilos.contenedorSaludo}>
-                    <Text style={estilos.textoSaludo}>Hola, {nombreUsuario} 👋</Text>
+                {/* Mensaje de Motivación */}
+                <View style={estilos.contenedorMotivacion}>
                     <Text style={estilos.textoSubsaludo}>Vamos con todo hoy</Text>
                 </View>
 
-                {/* Tarjeta Principal */}
+                {/* Tarjeta Principal: Rutina del Día */}
                 <View style={estilos.tarjetaDestacadaContainer}>
                     <ImageBackground
                         source={{ uri: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=687&auto=format&fit=crop' }}
                         style={estilos.imagenFondoTarjeta}
-                        imageStyle={{ borderRadius: 20 }}
+                        imageStyle={{ borderRadius: 25 }}
                     >
                         <View style={estilos.overlayNegro}>
                             <Text style={estilos.textoRutinaDelDia}>RUTINA DEL DÍA</Text>
@@ -125,14 +151,13 @@ export default function HomeScreen() {
                     <CardProgreso icon="trophy" valor="350" desc="minutos" color="#FFD700" />
                 </View>
 
-                {/* Espacio final para que el menú flotante no tape el contenido */}
-                <View style={{ height: 120 }} />
+                <View style={{ height: 100 }} />
             </ScrollView>
         </SafeAreaView>
     );
 }
 
-// Sub-componentes
+// Sub-componentes auxiliares
 const TarjetaRutina = ({ titulo, nivel, tiempo, img }: any) => (
     <TouchableOpacity style={estilos.cardRutina}>
         <Image source={{ uri: img }} style={estilos.imgCard} />
@@ -158,15 +183,54 @@ const CardProgreso = ({ icon, valor, desc, color, isMCI = false }: any) => (
 
 const estilos = StyleSheet.create({
     contenedorPrincipal: { flex: 1, backgroundColor: COLORES.fondo },
-    contenidoScroll: { paddingHorizontal: 20, paddingTop: 10 },
-    contenedorSaludo: { marginBottom: 15 },
-    textoSaludo: { fontSize: 28, fontWeight: 'bold', color: COLORES.textoPrincipal },
-    textoSubsaludo: { fontSize: 16, color: COLORES.textoSecundario, marginTop: 4 },
+    headerSuperior: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 15,
+    },
+    perfilGrupo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    fotoPerfilHeader: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        borderWidth: 2,
+        borderColor: COLORES.primario,
+    },
+    textoGrupoHeader: {
+        marginLeft: 12,
+    },
+    textoHola: {
+        color: COLORES.textoSecundario,
+        fontSize: 14,
+    },
+    textoNombreUser: {
+        color: COLORES.textoPrincipal,
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    botonConfig: {
+        width: 45,
+        height: 45,
+        backgroundColor: COLORES.tarjeta,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: COLORES.borde,
+    },
+    contenidoScroll: { paddingHorizontal: 20 },
+    contenedorMotivacion: { marginBottom: 20 },
+    textoSubsaludo: { fontSize: 16, color: COLORES.textoSecundario },
     tarjetaDestacadaContainer: { height: 230, borderRadius: 25, marginBottom: 25, overflow: 'hidden' },
-    imagenFondoTarjeta: { flex: 1, justifyContent: 'flex-end' },
+    imagenFondoTarjeta: { flex: 1 },
     overlayNegro: {
         padding: 20,
-        backgroundColor: 'rgba(0,0,0,0.4)',
+        backgroundColor: 'rgba(0,0,0,0.35)',
         flex: 1,
         justifyContent: 'center'
     },

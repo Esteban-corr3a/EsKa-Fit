@@ -115,22 +115,37 @@ export default function ADMIN_Gestionperfiles() {
   };
 
   const borrarUsuario = async (id: string, nombre: string) => {
-    Alert.alert(
-      "Confirmar",
-      `¿Seguro que quieres eliminar a ${nombre}?`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Eliminar", style: "destructive", onPress: async () => {
-            const { error } = await supabase.from('Usuarios').delete().eq('id', id);
-            if (!error) {
-              setListaUsuarios(listaUsuarios.filter(u => u.id !== id));
-            } else {
-              Alert.alert("Error", "No se pudo eliminar el registro");
-            }
-        }}
-      ]
-    );
-  };
+  Alert.alert(
+    "Confirmar eliminación",
+    `¿Seguro que quieres eliminar a ${nombre}? Esta acción borrará también sus credenciales de acceso.`,
+    [
+      { text: "Cancelar", style: "cancel" },
+      { 
+        text: "Eliminar", 
+        style: "destructive", 
+        onPress: async () => {
+          setCargando(true); // Mostrar carga mientras procesa
+          try {
+            const { error } = await supabase
+              .from('Usuarios')
+              .delete()
+              .eq('id', id);
+
+            if (error) throw error;
+
+            // Actualizar el estado local inmediatamente
+            setListaUsuarios(prev => prev.filter(u => u.id !== id));
+            Alert.alert("Éxito", "Usuario eliminado correctamente del sistema.");
+          } catch (error: any) {
+            Alert.alert("Error de eliminación", error.message || "No se pudo eliminar el registro");
+          } finally {
+            setCargando(false);
+          }
+        } 
+      }
+    ]
+  );
+};
 
   if (cargando && listaUsuarios.length === 0) {
     return <ActivityIndicator style={{flex: 1, backgroundColor: '#000'}} color="#C5FF2A" />;

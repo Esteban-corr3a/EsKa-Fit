@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import { useFocusEffect } from '@react-navigation/native'; 
 
 const COLORES = {
   fondo: '#000000',
@@ -23,14 +24,18 @@ const COLORES = {
   error: '#FF4444',
 };
 
+const FOTO_DEFAULT = 'https://via.placeholder.com/110?text=Avatar';
+
 export default function Perfil({ navigation }: any) {
   const [esAdmin, setEsAdmin] = useState(false);
-  const [usuario, setUsuario] = useState({ nombre: '', email: '' });
+  const [usuario, setUsuario] = useState({ nombre: '', email: '', fotoUrl:'' });
   const [cargando, setCargando] = useState(true);
 
-  useEffect(() => {
-    cargarPerfil();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      cargarPerfil();
+    }, [])
+  );
 
   const cargarPerfil = async () => {
     try {
@@ -41,7 +46,7 @@ export default function Perfil({ navigation }: any) {
         // 1. Obtener datos de la tabla Usuarios (rol y nombre)
         const { data, error } = await supabase
           .from('Usuarios')
-          .select('rol, nombre_completo')
+          .select('rol, nombre_completo, foto_url')
           .eq('id', user.id)
           .single();
 
@@ -49,6 +54,7 @@ export default function Perfil({ navigation }: any) {
           setUsuario({
             nombre: data.nombre_completo || 'Usuario EskaFit',
             email: user.email || '',
+            fotoUrl: data.foto_url || '', // <-- Guardamos la URL de la DB
           });
           
           if (data.rol?.toLowerCase().trim() === 'admin') {
@@ -93,7 +99,7 @@ export default function Perfil({ navigation }: any) {
         <View style={estilos.contenedorCabecera}>
           <View style={estilos.envolturaAvatar}>
             <Image
-              source={{ uri: 'https://media.timeout.com/images/105658155/750/562/image.jpg' }}
+             source={{ uri: usuario.fotoUrl || FOTO_DEFAULT }} 
               style={estilos.avatar}
             />
             <TouchableOpacity 

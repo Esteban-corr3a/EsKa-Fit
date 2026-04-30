@@ -6,6 +6,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Home from './Home'; 
 import Perfil from './Perfil';
 import Ejercicios from './Ejercicios';
+import Progreso from './Progreso';
 
 const RutinasScreen = () => <View style={estilos.pantallaBase} />;
 const ProgresoScreen = () => <View style={estilos.pantallaBase} />;
@@ -72,7 +73,7 @@ export default function MenuPrincipal() {
         <Tab.Screen name="Inicio" component={Home} />
         <Tab.Screen name="Ejercicios" component={Ejercicios} />
         <Tab.Screen name="Rutinas" component={RutinasScreen} />
-        <Tab.Screen name="Progreso" component={ProgresoScreen} />
+        <Tab.Screen name="Progreso" component={Progreso} />
         <Tab.Screen name="Perfil" component={Perfil} />
       </Tab.Navigator>
     </View>
