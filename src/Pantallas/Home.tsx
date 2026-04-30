@@ -1,4 +1,4 @@
-import React, { useState, useCallback,useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
     StyleSheet,
     View,
@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
-import { useFocusEffect } from '@react-navigation/native'; 
+import { useFocusEffect } from '@react-navigation/native';
 
 
 const { width } = Dimensions.get('window');
@@ -27,15 +27,15 @@ const COLORES = {
     borde: '#1C1C1E',
 };
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }: any) {
     const [nombreUsuario, setNombreUsuario] = useState('Cargando...');
     const [fotoPerfil, setFotoPerfil] = useState('https://via.placeholder.com/150');
 
     useFocusEffect(
-    useCallback(() => {
-        obtenerDatosUsuario();
-    }, [])
-);
+        useCallback(() => {
+            obtenerDatosUsuario();
+        }, [])
+    );
 
     const obtenerDatosUsuario = async () => {
         try {
@@ -51,7 +51,7 @@ export default function HomeScreen() {
                     // Extraemos solo el primer nombre para el saludo
                     const primerNombre = data.nombre_completo ? data.nombre_completo.split(' ')[0] : 'Guerrero';
                     setNombreUsuario(primerNombre);
-                    
+
                     if (data.foto_url) {
                         setFotoPerfil(data.foto_url);
                     }
@@ -70,22 +70,35 @@ export default function HomeScreen() {
             {/* HEADER: Foto de perfil, Nombre y Configuración */}
             <View style={estilos.headerSuperior}>
                 <View style={estilos.perfilGrupo}>
-                    <Image 
-                        source={{ uri: fotoPerfil }} 
-                        style={estilos.fotoPerfilHeader} 
+                    <Image
+                        source={{ uri: fotoPerfil }}
+                        style={estilos.fotoPerfilHeader}
                     />
                     <View style={estilos.textoGrupoHeader}>
                         <Text style={estilos.textoHola}>Hola,</Text>
                         <Text style={estilos.textoNombreUser}>{nombreUsuario} 👋</Text>
                     </View>
                 </View>
-                
+
                 <TouchableOpacity style={estilos.botonConfig}>
                     <Feather name="menu" size={24} color={COLORES.textoPrincipal} />
                 </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={estilos.contenidoScroll}>
+                <TouchableOpacity
+                    style={estilos.botonCamaraRapida}
+                    onPress={() => navigation.navigate('CamaraScreen')} // Nombre exacto de tu Stack
+                >
+                    <View style={estilos.iconoCamaraCirculo}>
+                        <Ionicons name="camera" size={24} color="#000" />
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 15 }}>
+                        <Text style={estilos.tituloCamara}>Escanear comida</Text>
+                        <Text style={estilos.subtituloCamara}>Registra tus macros con IA</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={COLORES.primario} />
+                </TouchableOpacity>
 
                 {/* Mensaje de Motivación */}
                 <View style={estilos.contenedorMotivacion}>
@@ -275,4 +288,24 @@ const estilos = StyleSheet.create({
     filaProgreso: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
     valorProgresoText: { color: '#FFF', fontSize: 22, fontWeight: 'bold', marginLeft: 6 },
     descProgresoText: { color: COLORES.textoSecundario, fontSize: 11, textAlign: 'center' },
+    botonCamaraRapida: {
+        backgroundColor: COLORES.tarjeta,
+        borderRadius: 20,
+        padding: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: COLORES.borde,
+    },
+    iconoCamaraCirculo: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: COLORES.primario,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    tituloCamara: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+    subtituloCamara: { color: COLORES.textoSecundario, fontSize: 12 },
 });

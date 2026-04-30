@@ -10,6 +10,7 @@ import EditarPerfil from '../Pantallas/EditarPerfil';
 import Ejercicios from '../Pantallas/Ejercicios';
 import Progreso from '../Pantallas/Progreso';
 import CalculadoraMacros from '../Pantallas/CalculadoraMacros';
+import CamaraScreen from '../Pantallas/CamaraScreen';
 
 // Pantallas de Administrador
 import ADMIN_Panel from '../Pantallas/ADMIN_Panel';
@@ -73,6 +74,9 @@ export default function StackNavigator() {
         }} />
         <Stack.Screen name="Progreso" component={Progreso} options={{
           headerShown: true, title: 'Progreso', headerStyle: { backgroundColor: '#000' }
+        }} />
+        <Stack.Screen name="CamaraScreen" component={CamaraScreen} options={{
+          headerShown: true, title: 'Cámara', headerStyle: { backgroundColor: '#000' }
         }} />
         
       </Stack.Navigator>
