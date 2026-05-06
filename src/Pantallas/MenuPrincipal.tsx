@@ -4,12 +4,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Home from './Home'; 
-import Perfil from './Perfil';
 import Ejercicios from './Ejercicios';
 import Progreso from './Progreso';
 
+// Componente temporal para Rutinas
 const RutinasScreen = () => <View style={estilos.pantallaBase} />;
-const ProgresoScreen = () => <View style={estilos.pantallaBase} />;
 
 const Tab = createBottomTabNavigator();
 
@@ -24,13 +23,12 @@ export default function MenuPrincipal() {
           tabBarInactiveTintColor: '#888',
           tabBarStyle: {
             position: 'absolute',
-            // SUBIMOS LA BARRA: 40 para iOS (gestos) y 30 para Android (botones)
             bottom: Platform.OS === 'ios' ? 40 : 30, 
             left: 20,
             right: 20,
             
             // DISEÑO DE ISLA
-            height: 75, // Un poco más alta para que respire
+            height: 75, 
             borderRadius: 35,
             backgroundColor: '#1A1A1A',
             borderTopWidth: 0,
@@ -40,7 +38,7 @@ export default function MenuPrincipal() {
             paddingBottom: 12,
 
             // SOMBRA Y ELEVACIÓN
-            elevation: 15, // Muy importante para Android
+            elevation: 15, 
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 10 },
             shadowOpacity: 0.6,
@@ -64,8 +62,6 @@ export default function MenuPrincipal() {
               return <MaterialCommunityIcons name="dumbbell" size={size} color={color} />;
             } else if (route.name === 'Progreso') {
               return <MaterialCommunityIcons name="chart-bar" size={size} color={color} />;
-            } else if (route.name === 'Perfil') {
-              return <Ionicons name={focused ? "person" : "person-outline"} size={size} color={color} />;
             }
           },
         })}
@@ -74,7 +70,8 @@ export default function MenuPrincipal() {
         <Tab.Screen name="Ejercicios" component={Ejercicios} />
         <Tab.Screen name="Rutinas" component={RutinasScreen} />
         <Tab.Screen name="Progreso" component={Progreso} />
-        <Tab.Screen name="Perfil" component={Perfil} />
+        
+        {/* El Screen de Perfil ha sido eliminado de aquí */}
       </Tab.Navigator>
     </View>
   );

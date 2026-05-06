@@ -165,9 +165,7 @@ export default function EditarPerfil({ navigation }: any) {
 
             {/* HEADER */}
             <View style={estilos.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={estilos.botonCerrar}>
-                    <Ionicons name="close" size={28} color={COLORES.textoPrincipal} />
-                </TouchableOpacity>
+                
                 <Text style={estilos.tituloHeader}>Editar Perfil</Text>
                 <TouchableOpacity onPress={manejarActualizacion} disabled={cargando}>
                     {cargando ? (

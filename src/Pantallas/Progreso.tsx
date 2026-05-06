@@ -26,7 +26,6 @@ export default function Progreso({ navigation }: any) {
     grasas: 0
   });
 
-  // Efecto para recalcular cada vez que cambien los datos físicos
   useEffect(() => {
     calcularObjetivos();
   }, [datosPerfil]);

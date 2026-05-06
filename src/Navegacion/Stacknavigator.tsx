@@ -6,8 +6,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MenuPrincipal from '../Pantallas/MenuPrincipal';
 import Login from '../Pantallas/Login';
 import Registro from '../Pantallas/Registro';
+import Perfil from '../Pantallas/Perfil';
 import EditarPerfil from '../Pantallas/EditarPerfil';
 import Ejercicios from '../Pantallas/Ejercicios';
+import DetalleEjercicio from '../Pantallas/DetalleEjercicio';
 import Progreso from '../Pantallas/Progreso';
 import CalculadoraMacros from '../Pantallas/CalculadoraMacros';
 import CamaraScreen from '../Pantallas/CamaraScreen';
@@ -68,6 +70,12 @@ export default function StackNavigator() {
         {/* FLUJO USUARIO */}
         <Stack.Screen name="EditarPerfil" component={EditarPerfil} options={{
           headerShown: true, title: 'Editar Perfil', headerStyle: { backgroundColor: '#000' }
+        }} />
+        <Stack.Screen name="Perfil" component={Perfil} options={{
+          headerShown: true, title: 'Perfil', headerStyle: { backgroundColor: '#000' }
+        }} />
+        <Stack.Screen name="DetalleEjercicio" component={DetalleEjercicio} options={{
+          headerShown: true, title: 'Detalle del Ejercicio', headerStyle: { backgroundColor: '#000' }
         }} />
         <Stack.Screen name="CalculadoraMacros" component={CalculadoraMacros} options={{
           headerShown: true, title: 'Calculadora de Macros', headerStyle: { backgroundColor: '#000' }
